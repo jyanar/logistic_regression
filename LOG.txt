@@ -1,0 +1,11 @@
+# Log
+
+# 2020-01-12
+Implemented function that groups trials into NGROUPS (for example, trials with
+-30 to -20 evidence, -19 to -10, etc). 
+	TODO: probably best to make it such that the inside group (-6, 6)
+	is the only one with inclusive boundaries? All other groups are
+	inclusive on the number away from center, but exclusive for one
+	towards center. idk.
+
+
