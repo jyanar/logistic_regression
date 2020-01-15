@@ -1,5 +1,9 @@
 # Log
 
+# 2020-01-15
+- Need to make it such that we can fit logistic regression to either to the
+beginning of the stimulus or the end of the stimulus presentation.
+
 # 2020-01-14
 - Figured out how to fit a logistic regression using the GLM.jl package to the
 simulated data from NEU314. Now to fit to Chuck's data!
@@ -40,7 +44,7 @@ simulated data from NEU314. Now to fit to Chuck's data!
           left clicks. Holdover from the random dot motion task, in which the
           monkeys are sorta trying to estimate the generative process itself.
           Chuck says that somewhere between 1 - 4% of trials are wrong.
-        - hh: Hit history, again (1 = correct, 2 = incorrect answer)
+        - hh: Hit history, again (1 = correct, 0 = incorrect answer)
         - pd: Duration of stimulus. This is the amount of time that clicks were
           allowed to occur within. Ranges from 200 to 1000 ms. Note that the
           trial itself is 1.5 seconds long, and the stimulus window is anchored

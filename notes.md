@@ -22,4 +22,6 @@ $\frac{d\sigma}{dt} = \sigma(1 - \sigma)$
 
 For a given data set {$\phi_n, t_n$}, 
 
-There is no such thing as the inverse of a rectangular matrix!
+
+
+

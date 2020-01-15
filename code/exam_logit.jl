@@ -17,6 +17,7 @@ NGROUPS = 10
 using JLD
 using GLM
 using PyPlot
+using DataFrames
 using Statistics
 
 include("utils.jl")
