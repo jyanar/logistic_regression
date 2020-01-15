@@ -1,6 +1,33 @@
+using LinearAlgebra
+
 """ Utilities for logit regression
 """
 
+""" read_ratdata(importpath)
+Reads in ratdata from a given file containing pbups behavioral data.
+"""
+function read_ratdata(importpath)
+    data = matread(importpath)
+    return data["ratdata"]
+end
+
+""" logistic_func(a)
+"""
+function logistic_func(a)
+	return 1 / (1 + exp(-a))
+end
+
+""" logistic_gradient(X,y,w)
+"""
+function logistic_gradient(X,y,w)
+	return X' * (y - logistic_func(X ))
+end
+
+
+""" compute_hh(total_diff, y)
+Computes hit history from total trial evidences in total_diff and
+responses in y. Returns hit history.
+"""
 function compute_hh(total_diff, y)
     hh = zeros(length(y))
     for i = 1 : length(total_diff)

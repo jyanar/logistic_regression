@@ -10,7 +10,7 @@
 
 ## PARAMS #####################################################################
 
-NGROUPS = 9
+NGROUPS = 10
 
 ###############################################################################
 
@@ -38,4 +38,38 @@ ratB["hh"] = compute_hh(ratB["totaldiff"], ratB["y"])
 ratA = group_trials_on_evidence(ratA, NGROUPS)
 ratB = group_trials_on_evidence(ratB, NGROUPS)
 
-## Compute
+## Fit logistic regression model to both rats
+dictA = Dict() ; dictB = Dict()
+for i = 1 : 20
+    dictA["wt" * string(i)] = ratA["X"][:,i]
+    dictB["wt" * string(i)] = ratB["X"][:,i]
+end
+dictA["y"] = convert.(Int, ratA["y"])
+dictB["y"] = convert.(Int, ratB["y"])
+
+dfA = DataFrame(dictA);
+dfB = DataFrame(dictB);
+
+logitA = glm(@formula(y ~ wt1 + wt2 + wt3 + wt4 + wt5 + wt6 + wt8 + wt9 + wt10 + wt11 + wt12 + wt13 + wt14 + wt15 + wt16 + wt17 + wt18 + wt19 + wt20), dfA, Binomial(), LogitLink())
+logitB = glm(@formula(y ~ wt1 + wt2 + wt3 + wt4 + wt5 + wt6 + wt8 + wt9 + wt10 + wt11 + wt12 + wt13 + wt14 + wt15 + wt16 + wt17 + wt18 + wt19 + wt20), dfB, Binomial(), LogitLink())
+
+figure()
+plot(1:20 , logitA.model.pp.beta0, ".--", label="Rat A")
+plot(1:20 , logitB.model.pp.beta0, ".--", label="Rat B")
+legend() ; title("Time bin weights from logistic regression modeling rat choice")
+gcf()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
