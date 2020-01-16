@@ -2,8 +2,13 @@
 """
 
 """
-    read_ratdata(importpath)
+One-liner for getting list of files from a dir
+"""
+searchdir(path,key) = filter(x->occursin(key,x), readdir(path))
 
+
+"""
+    read_ratdata(importpath)
 Reads in ratdata from a given file containing pbups behavioral data.
 """
 function read_ratdata(importpath)
