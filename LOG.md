@@ -1,27 +1,44 @@
-# Log
+# Lab Notebook
+
+# 2020-01-16
+
+- Finally have a full, automated pipeline for fitting logistic regressions to
+  the click difference and L/R sides, time-locked to the end of the stimulus.
+- Still need to do the following:
+  - Implement plotting code that has 95 CIs
+  - Implement preprocessing where data is time-locked to the beginning of the
+    stimulus
+  - Make surface plots like the ones Tyler has
+- Interesting observation: the intercepts for the logit model become shifted when you go from a click diff model to a L/R model:![](figs/intercept_shift_btwn_models.png)
+
 
 # 2020-01-15
+
 - Need to make it such that we can fit logistic regression to either to the
-beginning of the stimulus or the end of the stimulus presentation.
+  beginning of the stimulus or the end of the stimulus presentation.
 
 # 2020-01-14
+
 - Figured out how to fit a logistic regression using the GLM.jl package to the
-simulated data from NEU314. Now to fit to Chuck's data!
+  simulated data from NEU314. Now to fit to Chuck's data!
 
 # 2020-01-13
+
 - Want to learn GLM stuff today so I can start implementing it.
-    - Monday: Learn GLM stuff, start implementing it and getting data read in.
-    - Tuesday: Get data read in, implementing GLM.
-    - Wednesday: Have general function for fitting logit model to rats.
-    - Thursday: Inspect fits to multiple rats.
-    - Friday: Continue inspecting.
-    - Tuesday (next week): Be fitting to multiple datasets.
+  
+  - Monday: Learn GLM stuff, start implementing it and getting data read in.
+  - Tuesday: Get data read in, implementing GLM.
+  - Wednesday: Have general function for fitting logit model to rats.
+  - Thursday: Inspect fits to multiple rats.
+  - Friday: Continue inspecting.
+  - Tuesday (next week): Be fitting to multiple datasets.
 
 - Going to use GLM.jl to build the logistic regression analysis. bdata works,
   (you just have to be connected to the Princeton VPN), and I have the frozen
   noise data from Chuck.
-
+  
   It has the following fields (opening up an _ALL.mat file)
+  
   - vh: Violation history
   - hh: hit history, violated trials show up as NaNs
   - pd: Garbage (duration of stimulus, but messed up?)
@@ -31,6 +48,7 @@ simulated data from NEU314. Now to fit to Chuck's data!
   - is_frozen: If it's a frozen trial
   - parsed: struct, contains previous data but cleaned of violated trials.
     Containsthe following fields:
+    
         - bd: Bup difference at the end of the trial
         - gr: Whether the rat went right (1, went right, 0, went left)
         - b: Clicktimes
@@ -51,13 +69,11 @@ simulated data from NEU314. Now to fit to Chuck's data!
           to the end of the trial. Thus, rats know to stop accumulating at 1.5
           seconds, regardless of when the stimulus starts.
 
-
 # 2020-01-12
+
 Implemented function that groups trials into NGROUPS (for example, trials with
 -30 to -20 evidence, -19 to -10, etc). 
-	TODO: probably best to make it such that the inside group (-6, 6)
-	is the only one with inclusive boundaries? All other groups are
-	inclusive on the number away from center, but exclusive for one
-	towards center. idk.
-
-
+    TODO: probably best to make it such that the inside group (-6, 6)
+    is the only one with inclusive boundaries? All other groups are
+    inclusive on the number away from center, but exclusive for one
+    towards center. idk.
