@@ -17,12 +17,11 @@ include("utils.jl")
 ################################################################################
 
 cfg = Dict()
-cfg["IMPORTPATH_DATA"]   = "data/frozen_noise/"
-cfg["EXPORTPATH_DATA"]   = "data/"
-cfg["STIM_LENGTH_LIM"]   = 500
-cfg["TIMELOCK_STIM_END"] = false
-cfg["MSPERSEG"]          = 25
-cfg["MSOVERLAP"]         = 0
+cfg["IMPORTPATH_DATA"] = "data/frozen_noise/"
+cfg["EXPORTPATH_DATA"] = "data/"
+cfg["STIM_LENGTH_LIM"] = 500
+cfg["MSPERSEG"]        = 25
+cfg["MSOVERLAP"]       = 0
 
 ################################################################################
 
@@ -37,13 +36,8 @@ for irat = 1 : nrats
     regrMats[irat] = Dict()
     println("Running rat: " * filelist[irat] * " ...")
 
-    ## Read in data and organize parsed data
-    data = matread(cfg["IMPORTPATH_DATA"] * filelist[irat])
-    data = data["ratdata"]
-    parsed = data["parsed"]
-    for k in keys(parsed)
-        parsed[k] = parsed[k][1]
-    end
+    ## Read in data
+    data, parsed = load_rat_behavioral_data(cfg["IMPORTPATH_DATA"] * filelist[irat])
 
     ## Exclude the trials where stimulus is less than 500 ms in length
     ## Essentially, we're going to look at the 500 ms before the stim ends.
@@ -65,6 +59,7 @@ for irat = 1 : nrats
     Xd = zeros(ntrls, nbins)  ## For keeping track of bup difference
     Xr = zeros(ntrls, nbins)  ## For keeping track of right bups
     Xl = zeros(ntrls, nbins)  ## For keeping track of left bups
+    Xtotal = zeros(ntrls, 2)  ## For keeping track of total L/R bups
 
     ## Bin clicks from all trials into our regressor matrices
     for itrl = 1 : ntrls
@@ -106,24 +101,27 @@ for irat = 1 : nrats
             lbups = lbups[lbups .< cfg["STIM_LENGTH_LIM"]]
 
             ## Construct time bin limits
-            binlims = Int.(Array(range(-cfg["STIM_LENGTH_LIM"], 0, length=Int(nbins+1))))
+            binlims = Int.(Array(range(0, cfg["STIM_LENGTH_LIM"], length=Int(nbins+1))))
             for ibin = 1 : nbins
                 ## Can try inclusive start, exclusive end, later try switching this
                 rbinned[ibin] = length(findall(b -> b >= binlims[ibin] && b < binlims[ibin+1], rbups))
                 lbinned[ibin] = length(findall(b -> b >= binlims[ibin] && b < binlims[ibin+1], lbups))
             end
-            
-
         end
 
         Xr[itrl,:] = rbinned
         Xl[itrl,:] = lbinned
         Xd[itrl,:] = rbinned - lbinned
+        Xtotal[itrl,1], Xtotal[itrl,2] = sum(rbinned), sum(lbinned)
     end
 
     ## Construct dataframes
-    dict_Xrl = Dict("y" => y)
-    dict_Xd  = Dict("y" => y)
+    df_Xtotal = DataFrame(Dict("y" => y,
+                               "gr"  => parsed["gr"],
+                               "wtR" => Xtotal[:,1],
+                               "wtL" => Xtotal[:,2]))
+    dict_Xrl = Dict("y" => y, "gr" => parsed["gr"])
+    dict_Xd  = Dict("y" => y, "gr" => parsed["gr"])
     for ibin = 1 : nbins
         dict_Xd["wt_" * string(ibin)] = Xd[:,ibin]
         dict_Xrl["wtR_" * string(ibin)] = Xr[:,ibin]
@@ -132,24 +130,35 @@ for irat = 1 : nrats
     df_Xrl = DataFrame(dict_Xrl)
     df_Xd  = DataFrame(dict_Xd)
 
-    regrMats[irat]["fname"]   = filelist[irat]
-    regrMats[irat]["cfg"]     = cfg
-    regrMats[irat]["nrats"]   = nrats
-    regrMats[irat]["nbins"]   = nbins
-    regrMats[irat]["df_Xrl"]  = df_Xrl
-    regrMats[irat]["df_Xd"]   = df_Xd
-    regrMats[irat]["binlims"] = binlims
-    regrMats[irat]["xaxis"]   = 
+    regrMats[irat]["fname"]     = filelist[irat]
+    regrMats[irat]["cfg"]       = cfg
+    regrMats[irat]["nrats"]     = nrats
+    regrMats[irat]["nbins"]     = nbins
+    regrMats[irat]["df_Xrl"]    = df_Xrl
+    regrMats[irat]["df_Xd"]     = df_Xd
+    regrMats[irat]["df_Xtotal"] = df_Xtotal
 end
+
+## Generate x axis (in the form of centers of time bins) for the
+## binned data
+if cfg["TIMELOCK_STIM_END"]
+    binlims = Array(range(-cfg["STIM_LENGTH_LIM"], 0, length=Int(nbins+1)))
+else
+    binlims = Array(range(0, cfg["STIM_LENGTH_LIM"], length=Int(nbins+1)))
+end
+regrMats["binlims"] = binlims
+regrMats["xaxis"] = [(binlims[i]+binlims[i+1])/2 for i = 1 : nbins]
 regrMats["nrats"] = nrats
 regrMats["nbins"] = nbins
 
 ## Save dataframes for next step in logit analysis
-save(cfg["EXPORTPATH_DATA"] * "regrMats_allrats_" *
-    string(cfg["STIM_LENGTH_LIM"]) * "msLim_" * 
-    string(cfg["MSPERSEG"])        * "msBin_" *
-    "timeLockEnd-" * string(cfg["TIMELOCK_STIM_END"]) * "_" *
-    string(cfg["MSOVERLAP"]) * "msOverlap.jld2", "regrMats", regrMats)
+filename = cfg["EXPORTPATH_DATA"] * "regrMats_allrats_" *
+           string(cfg["STIM_LENGTH_LIM"]) * "msLim_" *
+           string(cfg["MSPERSEG"])        * "msBin_" *
+           "timeLockEnd-" * string(cfg["TIMELOCK_STIM_END"]) * "_" *
+           string(cfg["MSOVERLAP"]) * "msOverlap.jld2"
+println("Saving: " * string(filename))
+save(filename, "regrMats", regrMats)
 
 
 # function bin_bups_data(cfg, b, pd, nbins)

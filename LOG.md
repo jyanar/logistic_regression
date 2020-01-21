@@ -1,5 +1,19 @@
 # Lab Notebook
 
+# 2020-01-20
+
+- Wrote up script that can summarize the data - provides 1D and 2D
+psychometric functions, and with model predictions overlaid as well.
+- A few things to do:
+   - [ ] Some rats are pretty asymmetric: make decision completely based on L or
+   R click number. This should show up on the L/R time-varying logit analysis.
+   - [ ] Validate that shifted decision boundary like above results in worse
+   performance for one of the accumulation sides
+   - [ ] Should we cross-validate for the logit weights analysis?
+   - [ ] How does the 2D decision surface of the logit model vary as a function
+   of time? Might be that they weigh one side a lot early on and then both, etc.
+
+
 # 2020-01-16
 
 - Finally have a full, automated pipeline for fitting logistic regressions to
@@ -9,7 +23,9 @@
   - Implement preprocessing where data is time-locked to the beginning of the
     stimulus
   - Make surface plots like the ones Tyler has
-- Interesting observation: the intercepts for the logit model become shifted when you go from a click diff model to a L/R model:![](figs/intercept_shift_btwn_models.png)
+- Interesting observation: the intercepts for the logit model become shifted
+  when you go from a click diff model to a L/R model:
+  ![](figs/intercept_shift_btwn_models.png)
 
 
 # 2020-01-15
@@ -47,8 +63,7 @@
   - seed: Seed used to generate the trial
   - is_frozen: If it's a frozen trial
   - parsed: struct, contains previous data but cleaned of violated trials.
-    Containsthe following fields:
-    
+    Contains the following fields:
         - bd: Bup difference at the end of the trial
         - gr: Whether the rat went right (1, went right, 0, went left)
         - b: Clicktimes

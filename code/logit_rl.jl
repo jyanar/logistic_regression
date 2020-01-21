@@ -1,8 +1,9 @@
 """ Fits logistic regression model to data 
 
 TODO:
-- Plot with error bars
-- Make surface plots like the ones Tyler has
+- [x] Plot with error bars
+- [x] Make surface plots like the ones Tyler has
+ - [ ] How does he assign prop right?
 """
 
 using MAT
@@ -17,6 +18,7 @@ include("utils.jl")
 
 cfg = Dict()
 # cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500-lim_10-bin.jld"
+# cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-true_0msOverlap.jld2"
 cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-false_0msOverlap.jld2"
 cfg["EXPORTPATH_DATA"] = "data/"
 
@@ -27,24 +29,13 @@ data = data["regrMats"]
 for irat = 1 : data["nrats"]
     println("Fitting: " * string(irat) * " ...")
 
-    ## Hacky way of constructing expressions needed for the @formula
-    ## macro in the glm function from GLM.jl
-    expr_d = "@formula(y ~ wt_1"
-    for iwt = 2 : data[irat]["nbins"]
-        expr_d = expr_d * " + wt_" * string(iwt)
-    end
-    expr_d = expr_d * ")" 
+    ## Construct expressions to pass into the glm function from GLM.jl.
+    ## Because it requires explicit variables, we have to use the eval
+    ## and Meta.parse functions
+    expr_d  = construct_logit_expr("y", ["wt_"], data[irat]["nbins"])
+    expr_rl = construct_logit_expr("y", ["wtR_", "wtL_"], data[irat]["nbins"])
 
-    expr_rl = "@formula(y ~ wtR_1"
-    for iwt = 2 : data[irat]["nbins"]
-        expr_rl = expr_rl * " + wtR_" * string(iwt)
-    end
-    for iwt = 1 : data[irat]["nbins"]
-        expr_rl = expr_rl * " + wtL_" * string(iwt)
-    end
-    expr_rl = expr_rl * ")"
-
-    logit_d = glm(eval(Meta.parse(expr_d)), data[irat]["df_Xd"], Binomial(), LogitLink())
+    logit_d  = glm(eval(Meta.parse(expr_d)), data[irat]["df_Xd"], Binomial(), LogitLink())
     logit_rl = glm(eval(Meta.parse(expr_rl)), data[irat]["df_Xrl"], Binomial(), LogitLink())
     data[irat]["logit_d"]  = logit_d
     data[irat]["logit_rl"] = logit_rl
@@ -69,13 +60,7 @@ for irat = 1 : data["nrats"]
 end
 
 ## Plot weights from click difference model
-cfg = data[1]["cfg"]
-if cfg["TIMELOCK_STIM_END"]
-    xaxis = range(-cfg["STIM_LENGTH_LIM"], 0, length=data["nbins"])
-else
-    xaxis = range(0, cfg["STIM_LENGTH_LIM"], 0, length=data["nbins"])
-end
-
+cfg = data[1]["cfg"] ; xaxis = data["xaxis"]
 figure() ; plot(xaxis, zeros(length(xaxis)), "k--", alpha=0.5)
 for irat = 1 : data["nrats"]
     lower = wts_d_allrats[:,irat] - cis_d_allrats[:,irat]
@@ -84,7 +69,7 @@ for irat = 1 : data["nrats"]
     plot(xaxis, wts_d_allrats[:,irat])
     fill_between(xaxis, lower, upper, alpha=0.5)
 end
-xlim([minimum(xaxis), maximum(xaxis)]); ylim([-0.25, 0.25])
+xlim([minimum(xaxis), maximum(xaxis)])
 title("Logit regression weights, click difference model")
 
 ## Plot weights from L/R model
@@ -101,6 +86,12 @@ for irat = 1 : data["nrats"]
     plot(xaxis, wts_rl_allrats[:,2,irat], "*-", color="C" * string(irat))
     fill_between(xaxis, lowerL, upperL, alpha=0.5, color="C" * string(irat))
 end
-xlim([minimum(xaxis), maximum(xaxis)]); ylim([-0.25, 0.25])
+xlim([minimum(xaxis), maximum(xaxis)])
 title("Logit regression weights, L/R model")
+
+function plot_logit_weights(logit, xaxis)
+    H = figure();
+    plot()
+
+end
 

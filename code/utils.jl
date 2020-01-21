@@ -1,14 +1,79 @@
 """ Utilities for logit regression
 """
 
-"""
-One-liner for getting list of files from a dir
+""" One-liner for getting list of files from a dir
 """
 searchdir(path,key) = filter(x->occursin(key,x), readdir(path))
 
 
+function load_rat_behavioral_data(importpath)
+    data = matread(importpath)
+    data = data["ratdata"]
+    parsed = data["parsed"]
+    for k in keys(parsed)
+        parsed[k] = parsed[k][1]
+    end
+    return data, parsed
+end
+
+
+""" construct_logit_expr
+Constructs string to be parsed and evaluated as first arg to glm, such
+as:
+    @formula(y ~ wt_1 + wt_2)
+Parameters:
+    dep_var: string, dependent variable for the logit model. e.g., "y"
+    regr_prefixes: list of strings, prefixes of regressors to the
+        model. e.g., ["wtR_", "wtL_"] or ["wt_"]
+    nregr: integer, number of regressors for each prefix
+
+Examples:
+    > expr = construct_logit_expr("y", ["wtR_", "wtL_"], 2)
+    "@formula(y ~ wtR_1 + wtR_2 + wtL_1 + wtL_2)"
+    > logit = glm(eval(Meta.parse(expr)), df, Binomial(), LogitLink())
 """
-    read_ratdata(importpath)
+function construct_logit_expr(dep_var, regr_prefixes, nregr)
+    expr = "@formula(" * dep_var * " ~ ";
+    for iprefix = 1 : length(regr_prefixes)
+        for iregr = 1 : nregr
+            if iprefix == length(regr_prefixes) && iregr == nregr
+                ## If we're at the end of the expression, end it with ")"
+                expr = expr * regr_prefixes[iprefix] * string(iregr) * ")"
+            else
+                expr = expr * regr_prefixes[iprefix] * string(iregr) * " + "
+            end
+        end
+    end
+    return expr
+end
+
+
+""" bd_gr_surface_matrix(rb, lb, gr)
+Computes matrix whose axes are bup amounts for left and right,
+with magnitude for proportion went right.
+Params:
+- rb : Vector of length ntrials. Total right bups
+- lb : Vector of length ntrials. Total left bups
+- gr : Vector of length ntrials. Whether animal went right
+"""
+function bd_gr_surface_matrix(rb, lb, gr)#, hh)
+    maxbups = maximum([rb ; lb])
+    nclicks = 0 : 1 : maxbups
+    matr = zeros(length(nclicks), length(nclicks)) .+ NaN
+    for nr = nclicks
+        for nl = nclicks
+            ## For each (nr, nl) pair, find all trials that match
+            matching_trials = (rb .== nr) .& (lb .== nl)
+            ## And compute the proportion of these trials where rat
+            ## went right
+            matr[Int(nr+1),Int(nl+1)] = length(findall(gr[matching_trials] .== 1)) / length(gr[matching_trials])
+        end
+    end
+    return matr
+end
+
+
+""" read_ratdata(importpath)
 Reads in ratdata from a given file containing pbups behavioral data.
 """
 function read_ratdata(importpath)
@@ -16,8 +81,8 @@ function read_ratdata(importpath)
     return data["ratdata"]
 end
 
-"""
-    logistic_func(a)
+
+""" logistic_func(a)
 Logistic function, mapping ℜ→[0,1)
 """
 function logistic_func(a)
@@ -27,7 +92,6 @@ end
 
 """
     compute_hh(total_diff, y)
-
 Computes hit history from total trial evidences in total_diff and
 responses in y. Returns hit history.
 """
