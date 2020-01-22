@@ -15,26 +15,28 @@ include("utils.jl")
 
 cfg = Dict()
 # cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500-lim_10-bin.jld"
-cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-true_0msOverlap.jld2"
+cfg["IMPORTPATH_STIMOFF_DATA"] = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-true_0msOverlap.jld2"
+cfg["IMPORTPATH_STIMON_DATA"]  = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-false_0msOverlap.jld2"
 # cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-false_0msOverlap.jld2"
 cfg["EXPORTPATH_DATA"] = "data/"
 
 ###############################################################################
 
 ## Load data and fit logit model to click totals
-data = load(cfg["IMPORTPATH_DATA"])
-data = data["regrMats"]
+# data = load(cfg["IMPORTPATH_STIMON_DATA"])["regrMats"]
+datastimoff = load(cfg["IMPORTPATH_STIMOFF_DATA"])["regrMats"]
+
 for irat = 1 : data["nrats"]
     println("Processing: " * string(irat) * " ...")
 
     ## Fitting
     ## Construct expressions for glm: "y ~ wtR_1 + wtR_2 + ..."
-    expr_d  = construct_logit_expr("y", ["wt_"], data[irat]["nbins"])
+    expr_d = construct_logit_expr("y", ["wt_"], data[irat]["nbins"])
     expr_rl = construct_logit_expr("y", ["wtR_", "wtL_"], data[irat]["nbins"])
-    logit_d     = glm(eval(Meta.parse(expr_d)), data[irat]["df_Xd"], Binomial(), LogitLink())
-    logit_rl    = glm(eval(Meta.parse(expr_rl)), data[irat]["df_Xrl"], Binomial(), LogitLink())
+    logit_d = glm(eval(Meta.parse(expr_d)), data[irat]["df_Xd"], Binomial(), LogitLink())
+    logit_rl = glm(eval(Meta.parse(expr_rl)), data[irat]["df_Xrl"], Binomial(), LogitLink())
     logit_total = glm(@formula(gr ~ wtR + wtL), data[irat]["df_Xtotal"], Binomial(), LogitLink())
-    data[irat]["logit_d"]  = logit_d
+    data[irat]["logit_d"] = logit_d
     data[irat]["logit_rl"] = logit_rl
     data[irat]["logit_total"] = logit_total
 
