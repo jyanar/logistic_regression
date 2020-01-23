@@ -1,9 +1,4 @@
 """ Fits logistic regression model to data 
-
-TODO:
-- [x] Plot with error bars
-- [x] Make surface plots like the ones Tyler has
- - [ ] How does he assign prop right?
 """
 
 using MAT
@@ -88,10 +83,3 @@ for irat = 1 : data["nrats"]
 end
 xlim([minimum(xaxis), maximum(xaxis)])
 title("Logit regression weights, L/R model")
-
-function plot_logit_weights(logit, xaxis)
-    H = figure();
-    plot()
-
-end
-

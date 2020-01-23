@@ -1,12 +1,6 @@
 """ Preprocessing the pbups data from .mat files into usable JLD files.
 Essentially, parses data out into DataFrames that can then easily be
 fed into GLM.jl logistic regression models.
-
-TODO
-- Export matrices timelocked to both start and end of stimulus
-- Different time bin sizes
-- Can choose whether to exclude trials based on stim length
-- Export time bin centers for plotting later
 """
 
 using MAT
@@ -20,7 +14,7 @@ cfg = Dict()
 cfg["IMPORTPATH_DATA"] = "data/frozen_noise/"   # Import path to .mat behavior
 cfg["EXPORTPATH_DATA"] = "data/"                # Export path for processed data
 cfg["STIM_WINDOW_LEN"] = 500                    # Stimulus window length, in ms
-cfg["MSPERSEG"]        = 25                     # Bin width, in ms
+cfg["MSPERSEG"]        = 50                     # Bin width, in ms
 cfg["MSOVERLAP"]       = 0                      # Bin overlap, in ms
 
 ################################################################################
@@ -35,6 +29,7 @@ regrMats = Dict{Any,Any}("cfg" => cfg,
                        "nbins" => nbins,
                     "filelist" => filelist)
 
+println("Crunching the rat data!")
 for irat = 1 : nrats
     println("Running rat: " * filelist[irat] * " ...")
 
@@ -64,7 +59,7 @@ for irat = 1 : nrats
         Xd = zeros(ntrls, nbins)  ## For keeping track of bup difference
         Xr = zeros(ntrls, nbins)  ## For keeping track of right bups
         Xl = zeros(ntrls, nbins)  ## For keeping track of left bups
-        Xtotal = zeros(ntrls, 2)  ## For keeping track of total L/R bups
+        Xtotal = zeros(ntrls, 2)  ## For keeping track of total L/R bups in this window
 
         ## Iterate through trials, binning and storing clicktimes into
         ## the allocated X matrices
@@ -84,18 +79,27 @@ for irat = 1 : nrats
         end
 
         ## Construct dataframe
-        dict_X = Dict("hh" => parsed["hh"],
-                      "gr" => parsed["gr"],
+        dict_X = Dict("hh" => convert.(Int64, parsed["hh"]),
+                      "gr" => convert.(Int64, parsed["gr"]),
                   "wtRtot" => Xtotal[:,1],
                   "wtLtot" => Xtotal[:,2])
         for ibin = 1 : nbins
-            dict_X["wt_"  * string(ibin)] = Xd[:,ibin]
+            dict_X["wtd_" * string(ibin)] = Xd[:,ibin]
             dict_X["wtR_" * string(ibin)] = Xr[:,ibin]
             dict_X["wtL_" * string(ibin)] = Xl[:,ibin]
         end
-        regrMats[irat][timelock] = Dict()
+        regrMats[irat][timelock] = Dict{Any,Any}()
         regrMats[irat][timelock]["X"] = DataFrame(dict_X)
     end
+
+    ## Note that we also want to make a dataframe that keeps track of
+    ## the absolute total number of L/R clicks per trial, for the left
+    ## and right
+    dict_X = Dict("hh" => convert.(Int64, parsed["hh"]),
+                  "gr" => convert.(Int64, parsed["gr"]),
+              "wtRtot" => [length(parsed["b"]["right"][i]) for i = 1 : ntrls],
+              "wtLtot" => [length(parsed["b"]["left"][i]) for i = 1 : ntrls])
+    regrMats[irat]["wholetrl"] = Dict{Any,Any}("X" => DataFrame(dict_X))
 
     ## Generate x axis (in the form of centers of time bins) for the
     ## binned data

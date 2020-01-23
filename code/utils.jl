@@ -122,6 +122,7 @@ function bd_gr_surface_matrix(rb::Array{Int64},
                               gr::Array{Int64})::Array{Float64}
     maxbups = maximum([rb ; lb])
     nclicks = 0 : 1 : maxbups
+    ## First dimension is L clicks (rows), second is R clicks (cols)
     matr = zeros(Float64, length(nclicks), length(nclicks))
     for nr = nclicks
         for nl = nclicks
@@ -129,7 +130,7 @@ function bd_gr_surface_matrix(rb::Array{Int64},
             matching_trials = (rb .== nr) .& (lb .== nl)
             ## And compute the proportion of these trials where rat
             ## went right
-            matr[nr+1,nl+1] = length(findall(gr[matching_trials] .== 1)) / length(gr[matching_trials])
+            matr[nl+1,nr+1] = length(findall(gr[matching_trials] .== 1)) / length(gr[matching_trials])
         end
     end
     return matr
