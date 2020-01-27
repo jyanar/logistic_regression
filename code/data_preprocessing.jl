@@ -17,7 +17,7 @@ IMPORTPATH_DATA = "data/frozen_noise/",   # Import path to .mat behavior
 EXPORTPATH_DATA = "data/",                # Export path for processed data
 STIM_WINDOW_LEN = 500,                    # Stimulus window length, in ms
 MSPERSEG        = 50,                     # Bin width, in ms
-MSOVERLAP       = 0,                      # Bin overlap, in ms
+MSOVERLAP       = 0                       # Bin overlap, in ms
 )
 
 ################################################################################

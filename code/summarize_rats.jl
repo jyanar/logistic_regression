@@ -154,11 +154,5 @@ for irat = 1 : data["nrats"]
     # data[irat]["wholetrl"]["X"] =
     # # Go left trials
     # data[irat]["wholetrl"]["X"]
-
-
-    # bar(1:2, )
-
-
-
     tight_layout()
 end
