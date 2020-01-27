@@ -109,6 +109,37 @@ function construct_logit_expr(dep_var::String,
 end
 
 
+""" get_wts_sterr
+Returns the intercept and weights of a given logistic regression model,
+as well as the standard error for each of the weights
+Params:
+- logit_model: Logit model from GLM.jl
+- nbins::Int64: Number of time bins in the model. If the model just
+  keeps track of left and right (e.g. wtRtot and wtLtot for each trial)
+  then nbins should == 2
+- LR::Bool: Whether the model keeps track of left and right clicks
+  seperately. e.g., will have regressors like
+    wtR_1, wtR_2, ..., wtR_nbins, wtL_1, ...wtL_nbins
+Returns:
+- bias::Float64: Bias (or intercept) term of the logit model
+- lwts::Array{Float64}: Weights for the left side
+
+"""
+function get_wts_sterr(logit_model, nbins::Int64, LR::Bool)
+    betas = logit_model.model.pp.beta0
+    sterr = stderror(logit_model)
+    bias = betas[1]
+    berr = sterr[1]
+    if LR
+        rwts = betas[2 : 1+nbins]
+        lwts = betas[2+nbins : end]
+        rsterr = sterr[2 : 1+nbins]
+        lsterr = sterr[2+nbins : end]
+    end
+    return bias, rwts, lwts, berr, rsterr, lsterr
+end
+
+
 """ bd_gr_surface_matrix(rb, lb, gr)
 Computes matrix whose axes are bup amounts for left and right,
 with magnitude for proportion went right.

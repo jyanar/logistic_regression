@@ -1,5 +1,33 @@
 # Lab Notebook
 
+# 2020-01-27
+
+- Met with Chuck today to figure out how to access the larger PBups database.
+  Essentially data is accessible through two places: through the jukebox server
+  as raw data, and through bdata. The task now is to basically trawl through the
+  settings for a given set of rats (like in Chuck's folder) and figure out:
+  - Which are doing pbups
+  - Which are doing it in the final stage, where they're at max perf
+  - Where the settings finally stabilize for a continuous set of sessions
+  EVENTUALLY
+  - Whether these contain good enough performance / low enough proportion of
+    violation trials that we can use it for the analysis. Chuck thinks that
+    about 20k trials is good enough for the analysis.
+  - Whether it's frequency or classic, and what rates (20 or 40 Hz)
+  
+- Should be able to write a (MATLAB?) script that takes a set of rats and
+  perhaps dates or option like final_stage for stable final performance and give
+  you back a .mat file that contains all of the standard stuff that Chuck's
+  files have in `data/frozen_noise/`
+
+
+# 2020-01-23
+
+- Is it the case that the intercept (the first beta term) determines how
+  off-diagonal the decision boundary is, while the weights of wtR and wtL are
+  what determines the slope of that decision boundary? Yes.
+- Going to add the bias term to the plots.
+
 # 2020-01-22
 
 - `data_preprocessing.jl` has been vastly refactored, such that processing a

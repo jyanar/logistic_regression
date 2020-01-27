@@ -12,8 +12,6 @@ include("utils.jl")
 ################################################################################
 
 cfg = Dict()
-# cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500-lim_10-bin.jld"
-# cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-true_0msOverlap.jld2"
 cfg["IMPORTPATH_DATA"] = "data/regrMats_allrats_500msLim_25msBin_timeLockEnd-false_0msOverlap.jld2"
 cfg["EXPORTPATH_DATA"] = "data/"
 
