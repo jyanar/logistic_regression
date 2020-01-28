@@ -75,7 +75,9 @@ for irat = 1 : data["nrats"]
     ## Construct figure
     figure(figsize=(16,10))
 
-    ## RAT PSYCHOMETRIC SURFACE
+    ##############################
+    ## RAT PSYCHOMETRIC SURFACE ##
+    ##############################
     subplot(231)
     rat_decision_surf = bd_gr_surface_matrix(data[irat]["wholetrl"]["X"].wtRtot,
                                              data[irat]["wholetrl"]["X"].wtLtot,
@@ -84,7 +86,9 @@ for irat = 1 : data["nrats"]
     xlabel("#R Clicks") ; ylabel("#L Clicks") ; colorbar() ; clim([0, 1])
     title("2d psychometric, rat")
 
-    ## 2D MODEL PSYCHOMETRIC SURFACE
+    ###################################
+    ## 2D MODEL PSYCHOMETRIC SURFACE ##
+    ###################################
     subplot(234)
     maxbups = maximum([data[irat]["wholetrl"]["X"].wtLtot ;
                        data[irat]["wholetrl"]["X"].wtRtot])
@@ -110,7 +114,7 @@ for irat = 1 : data["nrats"]
     errorbar(data["xaxis_stimon"], res_rl.rwts, yerr=1.96.*res_rl.rsterr, label="right weights", color="b")
     errorbar(data["xaxis_stimon"], lwts,        yerr=1.96.*res_rl.lsterr, label="left weights", color="r")
     if cfg.PLOT_BUPDIFF_KERNEL
-        errorbar(data["xaxis_stimon"], res_d.wts, yerr=1.96.*res_d.wsterr, label="bupdiff weights", color="k")
+        errorbar(data["xaxis_stimon"], res_d.wts, yerr=1.96.*res_d.wsterr, label="bupdiff weights", color="gray")
     end
     plot(data["xaxis_stimon"], zeros(length(data["xaxis_stimon"])), "k--", alpha=0.5)
     grid() ; legend()
@@ -133,7 +137,7 @@ for irat = 1 : data["nrats"]
     errorbar(data["xaxis_stimoff"], res_rl.rwts, yerr=1.96.*res_rl.rsterr, label="right weights", color="b")
     errorbar(data["xaxis_stimoff"], lwts,        yerr=1.96.*res_rl.lsterr, label="left weights", color="r")
     if cfg.PLOT_BUPDIFF_KERNEL
-        errorbar(data["xaxis_stimon"], res_d.wts, yerr=1.96.*res_d.wsterr, label="bupdiff weights", color="k")
+        errorbar(data["xaxis_stimoff"], res_d.wts, yerr=1.96.*res_d.wsterr, label="bupdiff weights", color="gray")
     end
     plot(data["xaxis_stimoff"], zeros(length(data["xaxis_stimoff"])), "k--", alpha=0.5)
     grid() ; legend()
@@ -149,7 +153,9 @@ for irat = 1 : data["nrats"]
     xlim([data["xaxis_stimoff"][1]-5 , data["xaxis_stimoff"][end]+5])
     title("Stim offset-locked logit weights with **bias**=" * @sprintf "%0.3f+/-%0.3f" res_rl.bias res_rl.berr);
 
-    ## Generate rate 1D psychometric function (click diff), and model as well
+    ############################################################################
+    ## Generate rate 1D psychometric function (click diff), and model as well ##
+    ############################################################################
     subplot(233)
     bd = data[irat]["wholetrl"]["X"].wtRtot - data[irat]["wholetrl"]["X"].wtLtot
     gr = data[irat]["wholetrl"]["X"].gr
@@ -167,16 +173,18 @@ for irat = 1 : data["nrats"]
     legend(); xlabel("Click difference [#R-#L]") ; ylabel("% go right")
     title("1D psychometric")
 
-    ## Performance stacked bar plots
+    ###################################
+    ## Performance stacked bar plots ##
+    ###################################
     subplot(236)
-    corr_right = sum(Bool.(data[irat]["wholetrl"]["X"].cr) .& Bool.(data[irat]["wholetrl"]["X"].hh))
-    corr_left  = sum(Bool.(data[irat]["wholetrl"]["X"].cl) .& Bool.(data[irat]["wholetrl"]["X"].hh))
+    corr_right   = sum(Bool.(data[irat]["wholetrl"]["X"].cr) .& Bool.(data[irat]["wholetrl"]["X"].hh))
+    corr_left    = sum(Bool.(data[irat]["wholetrl"]["X"].cl) .& Bool.(data[irat]["wholetrl"]["X"].hh))
     incorr_right = sum(Bool.(data[irat]["wholetrl"]["X"].cr) .& .!Bool.(data[irat]["wholetrl"]["X"].hh))
     incorr_left  = sum(Bool.(data[irat]["wholetrl"]["X"].cl) .& .!Bool.(data[irat]["wholetrl"]["X"].hh))
-    lapse_right = sum(data[irat]["violtrls"]["cr"])
-    lapse_left  = sum(data[irat]["violtrls"]["cl"])
+    lapse_right  = sum(data[irat]["violtrls"]["cr"])
+    lapse_left   = sum(data[irat]["violtrls"]["cl"])
 
-    p1 = bar(1:2, height=[corr_right, corr_left], )
+    p1 = bar(1:2, height=[corr_right, corr_left])
     p2 = bar(1:2, height=[incorr_right, incorr_left], bottom=[corr_right, corr_left])
     p3 = bar(1:2, height=[lapse_right, lapse_left], bottom=[corr_right+incorr_right, corr_left+incorr_left],
         tick_label=["right", "left"])

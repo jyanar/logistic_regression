@@ -155,22 +155,17 @@ function get_wts_sterr(logit_model, nbins::Int64, LR::Bool)
         rsterr = sterr[2 : 1+nbins]
         lsterr = sterr[2+nbins : end]
         return (
-            bias=bias,
-            rwts=rwts,
-            lwts=lwts,
-            berr=berr,
-            rsterr=rsterr,
-            lsterr=lsterr
+            bias=bias, berr=berr,
+            rwts=rwts, rsterr=rsterr,
+            lwts=lwts, lsterr=lsterr
         )
     else
         ## Otherwise, this simply tracks click difference across time
         wts = betas[2 : end]
         wsterr = sterr[2:end]
         return (
-            bias=bias,
-            wts=wts,
-            berr=berr,
-            wsterr=wsterr
+            bias=bias, berr=berr,
+            wts=wts, wsterr=wsterr
         )
     end
 end

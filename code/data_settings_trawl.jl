@@ -4,6 +4,11 @@ for adding to the logistic regression analysis.
 Should basically, for each rat, spit out the dates that we want to grab
 for analysis. Then we can construct bdata statements that let us grab
 precisely those.
+
+Want to look at the following:
+- PBupsSection_base_freq         : [int,int] if frequency task, [int] if classic task
+- RewardsSection_reward_type     : 
+- SessionDefinition_active_stage : 
 """
 
 using MAT
