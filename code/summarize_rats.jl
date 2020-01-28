@@ -1,16 +1,11 @@
 """ Generates figure for each rat summarizing #Lbups/#Rbups decision
 landscape, 2D model fits, and time-varying fits for stimoff and stimon
 locking.
-
-TODO
-- [x] Add error bars to the time-varying logit
-- [ ] Add stacked bar plots showing, for L/R trials, percent corr,
-    percent wrong, and percent lapse (adding lapse requires going back
-    and modifying data_preprocessing grab bad trials)
 """
 
 using MAT
 using GLM
+using Dates
 using Printf
 using PyPlot
 using PyCall
@@ -23,11 +18,14 @@ include("utils.jl")
 
 cfg = (
 ## io options
+PROGRAM_NAME    = "summarize_rats.jl",
 IMPORTPATH_DATA = "data/regrMats_allrats_500msLim_50msBin_0msOverlap.jld2",
 EXPORTPATH_DATA = "data/",
-SAVE_DATA = false,
+SAVE_DATA       = false,
+
 EXPORTPATH_FIGS = "figs/",
-SAVE_FIGS = true,
+SAVE_FIGS       = true,
+
 ## analysis and plotting options
 PLOT_KERNEL_MAGNITUDE = true  # Whether to plot L/R time-varying kernels'
                               # magnitudes, instead of opposite to one
@@ -35,6 +33,10 @@ PLOT_KERNEL_MAGNITUDE = true  # Whether to plot L/R time-varying kernels'
 )
 
 ###############################################################################
+
+if cfg.SAVE_FIGS
+    exportpath = mkdir_dated(cfg.EXPORTPATH_FIGS, cfg.PROGRAM_NAME)
+end
 
 ## Load data and fit logit model to click totals
 # data = load(cfg["IMPORTPATH_STIMON_DATA"])["regrMats"]
@@ -46,6 +48,7 @@ xaxis_stimoff = data["xaxis_stimoff"]
 
 for irat = 1 : data["nrats"]
     println("Processing: " * string(irat) * " ...")
+    ratid = data[irat]["fname"][1:4]
 
     ## Fitting
     ## Construct expressions for glm: "y ~ wtR_1 + wtR_2 + ...", fit to
@@ -94,34 +97,42 @@ for irat = 1 : data["nrats"]
 
     ## TIME-VARYING L/R MODEL, STIM ONSET
     subplot(232)
-    bias, rwts, lwts, berr, rsterr, lsterr = get_wts_sterr(data[irat]["stimon"]["logit_rl"], nbins, true)
-    if cfg.PLOT_KERNEL_MAGNITUDE lwts = lwts .* -1 end
-    errorbar(data["xaxis_stimon"], rwts, yerr=1.96.*rsterr, label="right weights", color="b")
-    errorbar(data["xaxis_stimon"], lwts, yerr=1.96.*lsterr, label="left weights", color="r")
+    res = get_wts_sterr(data[irat]["stimon"]["logit_rl"], nbins, true)
+    if cfg.PLOT_KERNEL_MAGNITUDE lwts = res.lwts .* -1 end
+    errorbar(data["xaxis_stimon"], res.rwts, yerr=1.96.*res.rsterr, label="right weights", color="b")
+    errorbar(data["xaxis_stimon"], lwts, yerr=1.96.*res.lsterr, label="left weights", color="r")
     plot(data["xaxis_stimon"], zeros(length(data["xaxis_stimon"])), "k--", alpha=0.5)
     grid() ; legend()
-    ylabel("logit weights <-left -- right->")
+    if cfg.PLOT_KERNEL_MAGNITUDE
+        ylabel("logit weights magnitude");
+    else
+        ylabel("logit weights <-left -- right->")
+    end
     # xlabel("Time relative to stimulus onset [ms]") ; ylabel("logit weights")
     if !cfg.PLOT_KERNEL_MAGNITUDE
         ylims = ylim() ; ylim([-maximum(abs.(ylims)), maximum(abs.(ylims))])
     end
     xlim([data["xaxis_stimon"][1]-5 , data["xaxis_stimon"][end]+5])
-    title("Stim onset-locked logit weights with bias=" * @sprintf "%0.3f+/-%0.3f" bias berr);
+    title("Stim onset-locked logit weights with bias=" * @sprintf "%0.3f+/-%0.3f" res.bias res.berr);
 
     subplot(235)
-    bias, rwts, lwts, berr, rsterr, lsterr = get_wts_sterr(data[irat]["stimoff"]["logit_rl"], nbins, true)
-    if cfg.PLOT_KERNEL_MAGNITUDE lwts = lwts .* -1 end
-    errorbar(data["xaxis_stimoff"], rwts, yerr=1.96.*rsterr, label="right weights", color="b")
-    errorbar(data["xaxis_stimoff"], lwts, yerr=1.96.*lsterr, label="left weights", color="r")
+    res = get_wts_sterr(data[irat]["stimoff"]["logit_rl"], nbins, true)
+    if cfg.PLOT_KERNEL_MAGNITUDE lwts = res.lwts .* -1 end
+    errorbar(data["xaxis_stimoff"], res.rwts, yerr=1.96.*res.rsterr, label="right weights", color="b")
+    errorbar(data["xaxis_stimoff"], lwts, yerr=1.96.*res.lsterr, label="left weights", color="r")
     plot(data["xaxis_stimoff"], zeros(length(data["xaxis_stimoff"])), "k--", alpha=0.5)
     grid() ; legend()
-    ylabel("logit weights <-left -- right->")
+    if cfg.PLOT_KERNEL_MAGNITUDE
+        ylabel("logit weights magnitude");
+    else
+        ylabel("logit weights <-left -- right->")
+    end
     xlabel("Time relative to stimulus offset/onset [ms]")
     if !cfg.PLOT_KERNEL_MAGNITUDE
         ylims = ylim() ; ylim([-maximum(abs.(ylims)), maximum(abs.(ylims))])
     end
     xlim([data["xaxis_stimoff"][1]-5 , data["xaxis_stimoff"][end]+5])
-    title("Stim offset-locked logit weights with **bias**=" * @sprintf "%0.3f+/-%0.3f" bias berr);
+    title("Stim offset-locked logit weights with **bias**=" * @sprintf "%0.3f+/-%0.3f" res.bias res.berr);
 
     ## Generate rate 1D psychometric function (click diff), and model as well
     subplot(233)
@@ -152,8 +163,12 @@ for irat = 1 : data["nrats"]
 
     p1 = bar(1:2, height=[corr_right, corr_left], )
     p2 = bar(1:2, height=[incorr_right, incorr_left], bottom=[corr_right, corr_left])
-    p3 = bar(1:2, height=[lapse_right, lapse_left], bottom=[corr_right+incorr_right, corr_left+incorr_left])
-    legend((p1[1],p2[1],p3[1]), ["corr", "incorr", "lapse"])
+    p3 = bar(1:2, height=[lapse_right, lapse_left], bottom=[corr_right+incorr_right, corr_left+incorr_left],
+        tick_label=["right", "left"])
+    legend((p1[1],p2[1],p3[1]), ["corr", "incorr", "viol"])
 
     tight_layout()
+    if cfg.SAVE_FIGS
+        savefig(exportpath * "/" * data[irat]["fname"][1:end-8] * ".png", dpi=150);
+    end
 end

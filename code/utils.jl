@@ -2,9 +2,26 @@
 """
 
 using MAT
+using Dates
 
 """ One-liner for getting list of files from a dir """
 searchdir(path,key) = filter(file->occursin(key,file), readdir(path))
+
+
+""" Make new directory with today's date. If dir(s) with that name
+already exist, create new directory with -N appended to the end, where
+N = number of existing dirs. """
+function mkdir_dated(parentpath::String, desc::String)
+    childname = string(Dates.today()) * "-" * desc
+    childpath = parentpath * string(Dates.today()) * "-" * desc
+    existing_childpaths = searchdir(parentpath, childname)
+    if isempty(existing_childpaths)
+        mkdir(childpath)
+    else
+        childpath = mkdir(childpath * "-" * string(length(existing_childpaths)))
+    end
+    return childpath
+end
 
 
 """ Load clean rat behavioral data from .mat files """
@@ -131,12 +148,30 @@ function get_wts_sterr(logit_model, nbins::Int64, LR::Bool)
     bias = betas[1]
     berr = sterr[1]
     if LR
+        ## If this is a logit model that distinguishes between L and R
+        ## evidence
         rwts = betas[2 : 1+nbins]
         lwts = betas[2+nbins : end]
         rsterr = sterr[2 : 1+nbins]
         lsterr = sterr[2+nbins : end]
+        return (
+            bias=bias,
+            rwts=rwts,
+            lwts=lwts,
+            berr=berr,
+            rsterr=rsterr,
+            lsterr=lsterr
+        )
+    else
+        ## Otherwise, this simply tracks click difference across time
+        wts = betas[2 : end]
+        wsterr = sterr[2:end]
+        return (
+            bias=bias,
+            wts=wts,
+            wsterr=wsterr
+        )
     end
-    return bias, rwts, lwts, berr, rsterr, lsterr
 end
 
 
