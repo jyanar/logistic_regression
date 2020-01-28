@@ -1,5 +1,9 @@
 """ Trawl through settings files in order to find suitable sessions
 for adding to the logistic regression analysis.
+
+Should basically, for each rat, spit out the dates that we want to grab
+for analysis. Then we can construct bdata statements that let us grab
+precisely those.
 """
 
 using MAT
@@ -8,7 +12,7 @@ include("utils.jl")
 ###############################################################################
 
 cfg = (
-IMPORTPATH = "/jukebox/brody/RATTER/SoloData/Settings/Chuck/K311/"
+IMPORTPATH = "/jukebox/brody/RATTER/SoloData/Settings/Chuck/K311/",
 RATIDS     = ["K311"]
 )
 
@@ -28,4 +32,21 @@ for ifile = 1 : length(files)
     push!(rwrds_active_scheme, data["RewardsSection_reward_type"])
     rwrds_active_stage[ifile] = data["SessionDefinition_active_stage"]
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -143,16 +143,17 @@ for irat = 1 : data["nrats"]
 
     ## Performance stacked bar plots
     subplot(236)
-    rtrls_total = sum(data[irat]["wholetrl"]["X"].cr .== 1) + sum(data[irat]["violtrls"]["cr"])
-    ltrls_total = sum(data[irat]["wholetrl"]["X"].cl .== 1) + sum(data[irat]["violtrls"]["cl"])
-    
+    corr_right = sum(Bool.(data[irat]["wholetrl"]["X"].cr) .& Bool.(data[irat]["wholetrl"]["X"].hh))
+    corr_left  = sum(Bool.(data[irat]["wholetrl"]["X"].cl) .& Bool.(data[irat]["wholetrl"]["X"].hh))
+    incorr_right = sum(Bool.(data[irat]["wholetrl"]["X"].cr) .& .!Bool.(data[irat]["wholetrl"]["X"].hh))
+    incorr_left  = sum(Bool.(data[irat]["wholetrl"]["X"].cl) .& .!Bool.(data[irat]["wholetrl"]["X"].hh))
+    lapse_right = sum(data[irat]["violtrls"]["cr"])
+    lapse_left  = sum(data[irat]["violtrls"]["cl"])
 
-    # rtrls_total = sum(data[irat]["violtrls"]["gr"] .== 1)
-    # rtrls_total = length(sum(data[irat]["violtrls"]["gr"] .== 1)) + data[irat][""])
-    # ltrls_total = length(sum(data[irat]["violtrls"]["gl"] .== 1)) + length(data[irat][""])
-    # Go right trials
-    # data[irat]["wholetrl"]["X"] =
-    # # Go left trials
-    # data[irat]["wholetrl"]["X"]
+    p1 = bar(1:2, height=[corr_right, corr_left], )
+    p2 = bar(1:2, height=[incorr_right, incorr_left], bottom=[corr_right, corr_left])
+    p3 = bar(1:2, height=[lapse_right, lapse_left], bottom=[corr_right+incorr_right, corr_left+incorr_left])
+    legend((p1[1],p2[1],p3[1]), ["corr", "incorr", "lapse"])
+
     tight_layout()
 end

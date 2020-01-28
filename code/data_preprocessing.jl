@@ -1,8 +1,6 @@
 """ Preprocessing the pbups data from .mat files into usable JLD files.
 Essentially, parses data out into DataFrames that can then easily be
 fed into GLM.jl logistic regression models.
-TODO
-- [ ] Grab violation trial information
 """
 
 using MAT
