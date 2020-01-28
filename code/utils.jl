@@ -169,6 +169,7 @@ function get_wts_sterr(logit_model, nbins::Int64, LR::Bool)
         return (
             bias=bias,
             wts=wts,
+            berr=berr,
             wsterr=wsterr
         )
     end
