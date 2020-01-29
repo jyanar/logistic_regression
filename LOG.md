@@ -1,25 +1,29 @@
 # Lab Notebook
 
+# 2020-01-29
+
+- Need to be able to check 
+
 # 2020-01-27
 
 - Met with Chuck today to figure out how to access the larger PBups database.
   Essentially data is accessible through two places: through the jukebox server
   as raw data, and through bdata. The task now is to basically trawl through the
   settings for a given set of rats (like in Chuck's folder) and figure out:
+  
   - Which are doing pbups
   - Which are doing it in the final stage, where they're at max perf
   - Where the settings finally stabilize for a continuous set of sessions
-  EVENTUALLY
+    EVENTUALLY
   - Whether these contain good enough performance / low enough proportion of
     violation trials that we can use it for the analysis. Chuck thinks that
     about 20k trials is good enough for the analysis.
   - Whether it's frequency or classic, and what rates (20 or 40 Hz)
-  
+
 - Should be able to write a (MATLAB?) script that takes a set of rats and
   perhaps dates or option like final_stage for stable final performance and give
   you back a .mat file that contains all of the standard stuff that Chuck's
   files have in `data/frozen_noise/`
-
 
 # 2020-01-23
 
@@ -90,12 +94,19 @@
   It has the following fields (opening up an _ALL.mat file)
   
   - vh: Violation history
+  
   - hh: hit history, violated trials show up as NaNs
+  
   - pd: Garbage (duration of stimulus, but messed up?)
+  
   - sd: Stimulus duration
+  
   - sh: Stimulator history, for opto.
+  
   - seed: Seed used to generate the trial
+  
   - is_frozen: If it's a frozen trial
+  
   - parsed: struct, contains previous data but cleaned of violated trials.
     Contains the following fields:
     

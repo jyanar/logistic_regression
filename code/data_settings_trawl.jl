@@ -22,7 +22,7 @@ RATIDS     = ["K" * string(id) for id = [213, 214, 215, 216, 236, 238, 241, 248,
                                          265, 280, 283, 284, 285, 289, 294, 296,
                                          297, 299, 310, 311, 313, 314, 316, 317,
                                          319, 322, 323, 324, 328, 329, 330, 331,
-                                         332, 335, 336, 338, 339, 340, 341]]
+                                         332, 335, 336, 338, 339, 340, 341]
 )
 
 fields = Dict(
@@ -41,54 +41,23 @@ fields = Dict(
 for irat = 1 : length(cfg.RATIDS)
     if isdir(cfg.IMPORTPATH * cfg.RATIDS[irat] * "/")
         files = searchdir(cfg.IMPORTPATH * cfg.RATIDS[irat] * "/", "@PBups")
-        goodfiles = zeros(length(files))
+        goodfiles = []
         for ifile = 1 : length(files)
             data = matread(cfg.IMPORTPATH * cfg.RATIDS[irat] * "/" * files[ifile])["saved"]
             if data["RewardsSection_reward_type"] == "delta clicks" && data["SessionDefinition_active_stage"] == 12
-                goodfiles[ifile] = 1
+                push!(goodfiles, ifile)
             end
         end
-
-        if sum(goodfiles) != 0
-            # Trim goodfiles
-            goodfstr = ""
-            for i = 1 : length(goodfiles)
-                goodfstr = goodfstr * Int(goodfiles[i])
+        if !isempty(goodfiles)
+            ## Find continuous set of sessions
+            transitions = diff(goodfiles)
+            if length(findall(transitions .> 1)) > 1
+                goodfiles = goodfiles[1 : argmax(transitions .> 1)]
             end
-            goodfiles = [parse(Int, i) for i in strip(goodfstr, '0')]
-            # Check if this is the kind of rat that has non-good files in the middle of
-            # useful sessions: 11111 ... 000 ... 1111. If so, ignore this rat
-            # Here we check that it's a good rat
-            if sum(goodfiles .== 0) == 0
-                first_file_idx = argmax(goodfiles .== 1)
-                println("First file:  " * files[first_file_idx])
-                println("Files after: " * string(length(goodfiles[first_file_idx : end])))
-                println("Files after, sum: " * string(sum(goodfiles[first_file_idx: end])))
-            end
+            println("First file:  " * files[goodfiles[1]])
+            println("Total files: " * length(goodfiles))
+            println("Last file:   " * files[goodfiles[end]])
         end
         println("")
     end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

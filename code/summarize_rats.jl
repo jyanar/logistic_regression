@@ -33,7 +33,7 @@ SAVE_FIGS       = true,
 PLOT_KERNEL_MAGNITUDE = true, # Whether to plot L/R time-varying kernels'
                               # magnitudes, instead of opposite to one
                               # another.
-PLOT_BUPDIFF_KERNEL   = true  # Whether to plot the time-varying click
+PLOT_BUPDIFF_KERNEL   = false  # Whether to plot the time-varying click
                               # difference kernel as well
 )
 
@@ -111,10 +111,10 @@ for irat = 1 : data["nrats"]
     res_rl = get_wts_sterr(data[irat]["stimon"]["logit_rl"], nbins, true)
     res_d  = get_wts_sterr(data[irat]["stimon"]["logit_d"], nbins, false)
     if cfg.PLOT_KERNEL_MAGNITUDE lwts = res_rl.lwts .* -1 end
-    errorbar(data["xaxis_stimon"], res_rl.rwts, yerr=1.96.*res_rl.rsterr, label="right weights", color="b")
-    errorbar(data["xaxis_stimon"], lwts,        yerr=1.96.*res_rl.lsterr, label="left weights", color="r")
+    errorbar(data["xaxis_stimon"], res_rl.rwts, yerr=res_rl.rsterr, label="right weights", color="b")
+    errorbar(data["xaxis_stimon"], lwts,        yerr=res_rl.lsterr, label="left weights", color="r")
     if cfg.PLOT_BUPDIFF_KERNEL
-        errorbar(data["xaxis_stimon"], res_d.wts, yerr=1.96.*res_d.wsterr, label="bupdiff weights", color="gray")
+        errorbar(data["xaxis_stimon"], res_d.wts, yerr=res_d.wsterr, label="bupdiff weights", color="gray")
     end
     plot(data["xaxis_stimon"], zeros(length(data["xaxis_stimon"])), "k--", alpha=0.5)
     grid() ; legend()
@@ -128,16 +128,16 @@ for irat = 1 : data["nrats"]
         ylims = ylim() ; ylim([-maximum(abs.(ylims)), maximum(abs.(ylims))])
     end
     xlim([data["xaxis_stimon"][1]-5 , data["xaxis_stimon"][end]+5])
-    title("Stim onset-locked logit weights with bias=" * @sprintf "%0.3f+/-%0.3f" res_rl.bias res_rl.berr);
+    title("Stim onset-locked logit weights, bias=" * @sprintf "%0.3f+/-%0.3f" res_rl.bias res_rl.berr);
 
     subplot(235)
     res_rl = get_wts_sterr(data[irat]["stimoff"]["logit_rl"], nbins, true)
     res_d  = get_wts_sterr(data[irat]["stimoff"]["logit_d"], nbins, false)
     if cfg.PLOT_KERNEL_MAGNITUDE lwts = res_rl.lwts .* -1 end
-    errorbar(data["xaxis_stimoff"], res_rl.rwts, yerr=1.96.*res_rl.rsterr, label="right weights", color="b")
-    errorbar(data["xaxis_stimoff"], lwts,        yerr=1.96.*res_rl.lsterr, label="left weights", color="r")
+    errorbar(data["xaxis_stimoff"], res_rl.rwts, yerr=res_rl.rsterr, label="right weights", color="b")
+    errorbar(data["xaxis_stimoff"], lwts,        yerr=res_rl.lsterr, label="left weights", color="r")
     if cfg.PLOT_BUPDIFF_KERNEL
-        errorbar(data["xaxis_stimoff"], res_d.wts, yerr=1.96.*res_d.wsterr, label="bupdiff weights", color="gray")
+        errorbar(data["xaxis_stimoff"], res_d.wts, yerr=res_d.wsterr, label="bupdiff weights", color="gray")
     end
     plot(data["xaxis_stimoff"], zeros(length(data["xaxis_stimoff"])), "k--", alpha=0.5)
     grid() ; legend()
@@ -151,7 +151,7 @@ for irat = 1 : data["nrats"]
         ylims = ylim() ; ylim([-maximum(abs.(ylims)), maximum(abs.(ylims))])
     end
     xlim([data["xaxis_stimoff"][1]-5 , data["xaxis_stimoff"][end]+5])
-    title("Stim offset-locked logit weights with **bias**=" * @sprintf "%0.3f+/-%0.3f" res_rl.bias res_rl.berr);
+    title("Stim offset-locked logit weights, bias=" * @sprintf "%0.3f+/-%0.3f" res_rl.bias res_rl.berr);
 
     ############################################################################
     ## Generate rate 1D psychometric function (click diff), and model as well ##
@@ -170,7 +170,7 @@ for irat = 1 : data["nrats"]
     end
     plot(xaxis, predict(logit_bd, DataFrame(bd=xaxis)), "k", label="model")
     plot(xaxis, propgr, "k", alpha=0.5, label="rat")
-    legend(); xlabel("Click difference [#R-#L]") ; ylabel("% go right")
+    grid() ; legend(); xlabel("Click difference [#R-#L]") ; ylabel("% go right")
     title("1D psychometric")
 
     ###################################
