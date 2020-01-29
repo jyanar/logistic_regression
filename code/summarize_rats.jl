@@ -83,8 +83,8 @@ for irat = 1 : data["nrats"]
                                              data[irat]["wholetrl"]["X"].wtLtot,
                                              data[irat]["wholetrl"]["X"].gr)
     imshow(rat_decision_surf, origin="lower", cmap=get_cmap("RdBu"))
-    xlabel("#R Clicks") ; ylabel("#L Clicks") ; colorbar() ; clim([0, 1])
-    title("2d psychometric, rat")
+    xlabel("#R Clicks") ; ylabel("#L Clicks") ; cbar = colorbar() ; clim([0, 1])
+    title("2d psychometric, rat") ; cbar.ax.set_ylabel("% go right")
 
     ###################################
     ## 2D MODEL PSYCHOMETRIC SURFACE ##
@@ -101,8 +101,8 @@ for irat = 1 : data["nrats"]
         end
     end
     imshow(model_decision_surf, origin="lower", cmap=get_cmap("RdBu"))
-    xlabel("#R Clicks") ; ylabel("#L Clicks") ; colorbar(); clim([0, 1])
-    title("2D psychometric, model")
+    xlabel("#R Clicks") ; ylabel("#L Clicks") ; cbar = colorbar(); clim([0, 1])
+    title("2D psychometric, model") ; cbar.ax.set_ylabel("% go right")
 
     ########################################
     ## TIME-VARYING L/R MODEL, STIM ONSET ##
