@@ -1,8 +1,8 @@
 # Lab Notebook
 
-# 2020-01-29
+# 2020-01-30
 
-- Need to be able to check 
+- Today, get chuck's files read in
 
 # 2020-01-27
 

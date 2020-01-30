@@ -24,10 +24,10 @@ cfg = (
 PROGRAM_NAME    = "summarize_rats.jl",
 IMPORTPATH_DATA = "data/regrMats_allrats_500msLim_50msBin_0msOverlap.jld2",
 EXPORTPATH_DATA = "data/",
-SAVE_DATA       = false,
+SAVE_DATA       = true,
 
 EXPORTPATH_FIGS = "figs/",
-SAVE_FIGS       = true,
+SAVE_FIGS       = false,
 
 ## analysis and plotting options
 PLOT_KERNEL_MAGNITUDE = true, # Whether to plot L/R time-varying kernels'
@@ -194,4 +194,14 @@ for irat = 1 : data["nrats"]
     if cfg.SAVE_FIGS
         savefig(exportpath * "/" * data[irat]["fname"][1:end-8] * "Hz.png", dpi=150);
     end
+end
+
+if cfg.SAVE_DATA
+    filename = cfg.EXPORTPATH_DATA * "regrMats_logitFits_allrats_" *
+               string(data["cfg"].STIM_WINDOW_LEN) * "msLim_" *
+               string(data["cfg"].MSPERSEG)        * "msBin_" *
+               string(data["cfg"].MSOVERLAP) * "msOverlap.jld2"
+    ## Save dataframes for next step in logit analysis
+    println("Saving: " * string(filename))
+    save(filename, "data", data)
 end

@@ -7,6 +7,12 @@ using Dates
 """ One-liner for getting list of files from a dir """
 searchdir(path,key) = filter(file->occursin(key,file), readdir(path))
 
+""" Pretty print a NamedTuple """
+function printnt(nt::NamedTuple)
+    for k in keys(nt)
+        println(string(k) * "\t=> " * string(nt[k]))
+    end
+end
 
 """ Make new directory with today's date. If dir(s) with that name
 already exist, create new directory with -N appended to the end, where
@@ -266,3 +272,40 @@ function group_trials_on_evidence(rat_struct, NGROUPS)
     end
     return rat_struct
 end
+
+
+function grp_trls_evidence(ratX, NGROUPS)
+    # Compute group ranges based on distribution of
+    # trial total evidences
+    totaldiff = ratX.wtRtot - ratX.wtLtot
+    if abs(maximum(totaldiff)) > abs(minimum(totaldiff))
+        grps_ranges = Array(range(-maximum(totaldiff),
+                                   maximum(totaldiff),
+                                   length=NGROUPS+1))
+    else
+        grps_ranges = Array(range(minimum(totaldiff),
+                                  abs(minimum(totaldiff)),
+                                  length=NGROUPS+1))
+    end
+
+    # Assign each trial to a group
+    grps_idx = []
+    for i = 1 : length(grps_ranges) - 1
+        push!(grps_idx, findall(x -> x >= grps_ranges[i] &&
+                                     x <  grps_ranges[i+1], totaldiff))
+    end
+
+    # Compute proportion correct of each trial group
+    prop_gr = zeros(length(grps_idx))
+    for i = 1 : length(prop_gr)
+        n_right  = length(findall(ratX.gr[grps_idx[i]] .== 1))
+        n_trials = length(grps_idx[i])
+        prop_gr[i] = n_right / n_trials
+    end
+    return (
+        prop_gr=prop_gr,
+        grps_ranges=grps_ranges,
+        grps_idx=grps_idx
+    )
+end
+
