@@ -22,9 +22,10 @@ include("utils.jl")
 cfg = (
 ## io options
 PROGRAM_NAME    = "summarize_rats.jl",
-IMPORTPATH_DATA = "data/regrMats_allrats_500msLim_50msBin_0msOverlap.jld2",
+# IMPORTPATH_DATA = "data/regrMats_allrats_500msLim_50msBin_0msOverlap.jld2",
+IMPORTPATH_DATA = "data/chuckrats_regrMats_allrats_500msLim_50msBin_0msOverlap.jld2",
 EXPORTPATH_DATA = "data/",
-SAVE_DATA       = true,
+SAVE_DATA       = false,
 
 EXPORTPATH_FIGS = "figs/",
 SAVE_FIGS       = false,
@@ -84,7 +85,7 @@ for irat = 1 : data["nrats"]
                                              data[irat]["wholetrl"]["X"].gr)
     imshow(rat_decision_surf, origin="lower", cmap=get_cmap("RdBu"))
     xlabel("#R Clicks") ; ylabel("#L Clicks") ; cbar = colorbar() ; clim([0, 1])
-    title("2d psychometric, rat") ; cbar.ax.set_ylabel("% go right")
+    title("2d psychometric, rat. Ntrls=" * string(data[irat]["ntrls"])) ; cbar.ax.set_ylabel("% go right")
 
     ###################################
     ## 2D MODEL PSYCHOMETRIC SURFACE ##
@@ -181,14 +182,14 @@ for irat = 1 : data["nrats"]
     corr_left    = sum(Bool.(data[irat]["wholetrl"]["X"].cl) .& Bool.(data[irat]["wholetrl"]["X"].hh))
     incorr_right = sum(Bool.(data[irat]["wholetrl"]["X"].cr) .& .!Bool.(data[irat]["wholetrl"]["X"].hh))
     incorr_left  = sum(Bool.(data[irat]["wholetrl"]["X"].cl) .& .!Bool.(data[irat]["wholetrl"]["X"].hh))
-    lapse_right  = sum(data[irat]["violtrls"]["cr"])
-    lapse_left   = sum(data[irat]["violtrls"]["cl"])
+    # lapse_right  = sum(data[irat]["violtrls"]["cr"])
+    # lapse_left   = sum(data[irat]["violtrls"]["cl"])
 
     p1 = bar(1:2, height=[corr_right, corr_left])
-    p2 = bar(1:2, height=[incorr_right, incorr_left], bottom=[corr_right, corr_left])
-    p3 = bar(1:2, height=[lapse_right, lapse_left], bottom=[corr_right+incorr_right, corr_left+incorr_left],
-        tick_label=["right", "left"])
-    legend((p1[1],p2[1],p3[1]), ["corr", "incorr", "viol"])
+    p2 = bar(1:2, height=[incorr_right, incorr_left], bottom=[corr_right, corr_left], tick_label=["right", "left"])
+    # p3 = bar(1:2, height=[lapse_right, lapse_left], bottom=[corr_right+incorr_right, corr_left+incorr_left],
+    # legend((p1[1],p2[1],p3[1]), ["corr", "incorr", "viol"])
+    legend((p1[1],p2[1]), ["corr", "incorr"])
 
     tight_layout()
     if cfg.SAVE_FIGS

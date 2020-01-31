@@ -35,9 +35,9 @@ function load_rat_behavioral_data(importpath::String)::Tuple{Dict, Dict}
     data = matread(importpath)
     data = data["ratdata"]
     parsed = data["parsed"]
-    for k in keys(parsed)
-        parsed[k] = parsed[k][1]
-    end
+    # for k in keys(parsed)
+    #     parsed[k] = parsed[k][1]
+    # end
     return data, parsed
 end
 

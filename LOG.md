@@ -2,7 +2,10 @@
 
 # 2020-01-30
 
-- Today, get chuck's files read in
+- Get chuck's files read in
+- Plots to make
+  - Performance vs bias, across all rats
+  - 
 
 # 2020-01-27
 
