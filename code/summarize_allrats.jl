@@ -12,6 +12,7 @@ using PyCall
 using Statistics
 using DataFrames
 using JLD2, FileIO
+# include("code/utils.jl")
 include("utils.jl")
 
 ###############################################################################
@@ -19,37 +20,79 @@ include("utils.jl")
 cfg = (
 ## io options
 PROGRAM_NAME    = "summarize_allrats.jl",
-IMPORTPATH_DATA = "data/regrMats_logitFits_allrats_500msLim_50msBin_0msOverlap.jld2",
+IMPORTPATH_DATA_FN = "data/logitFits_allrats_frozen_noise_500msLim_50msBin_0msOverlap.jld2", # frozen_noise
+IMPORTPATH_DATA_CU = "data/logitFits_allrats_chuckrats_update_500msLim_50msBin_0msOverlap.jld2",  # chuckrats_update
 EXPORTPATH_FIGS = "figs/",
 SAVE_FIGS       = false,
+
+## analysis options
+RATS_TO_USE = [283, 284, 285, 289, 290, 292, 293, 295, 296, 298, 301, 304,
+               305, 305, 311, 313, 314, 316, 317, 319, 322, 328, 330, 331,
+               335, 336, 339],
+VERS_TO_USE = [2, 2, 2, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 )
 
 ###############################################################################
 
-if cfg.SAVE_FIGS
-    exportpath = mkdir_dated(cfg.EXPORTPATH_FIGS, cfg.PROGRAM_NAME)
+function main(cfg)
+    RATIDS = ["K" * string(cfg.RATS_TO_USE[irat]) for irat = 1 : length(cfg.RATS_TO_USE)]
+
+    if cfg.SAVE_FIGS
+        exportpath = mkdir_dated(cfg.EXPORTPATH_FIGS, cfg.PROGRAM_NAME)
+    end
+
+    ## Load data and fit logit model to click totals
+    data_fn = load(cfg.IMPORTPATH_DATA_FN)["data"]
+    data_cu = load(cfg.IMPORTPATH_DATA_CU)["data"]
+    ## Grab ratnames for both pipelines
+    fn_ratnames = [data_fn[i]["fname"][1:4] for i = 1 : data_fn["nrats"]]
+    cu_ratnames = [data_cu[i]["fname"][1:4] for i = 1 : data_cu["nrats"]]
+
+    ## Organize into single dictionary
+    R = Dict()
+    for irat = 1 : length(RATIDS)
+        if cfg.VERS_TO_USE[irat] == 1
+            # Find the rat in data_fn
+            ratidx = argmax(fn_ratnames .== RATIDS[irat])
+            R[irat] = data_fn[ratidx]
+        elseif cfg.VERS_TO_USE[irat] == 2
+            ratidx = argmax(cu_ratnames .== RATIDS[irat])
+            R[irat] = data_cu[ratidx]
+        end
+    end
+    R["nrats"] = length(R)
+    R["nbins"] = data_fn["nbins"]
+    R["xaxis_stimon"]  = data_fn["xaxis_stimon"]
+    R["xaxis_stimoff"] = data_fn["xaxis_stimoff"]
+
+    ## Compute performance, bias, etc across all rats
+    perf   = [sum(R[irat]["wholetrl"]["X"].hh)/data[irat]["ntrls"] for irat = 1 : R["nrats"]]
+    rlbias = [R[irat]["wholetrl"]["logit"].model.pp.beta0[2]/R[irat]["wholetrl"]["logit"].model.pp.beta0[end] for irat = 1 : R["nrats"]]
+    bias   = [R[irat]["wholetrl"]["logit"].model.pp.beta0[1] for irat = 1 : R["nrats"]]
+
+    ## Collate
+    wts_bd_off = zeros(R["nbins"])
+    wts_bd_on  = zeros(R["nbins"])
+    for irat = 1 : length(R["nrats"])
+        wts_bd_off = wts_bd_off + R[irat]["stimoff"]["logit_d"].model.pp.beta0[2:end]
+        wts_bd_on  = wts_bd_on  + R[irat]["stimon"]["logit_d"].model.pp.beta0[2:end]
+    end
+    wts_bd_off = wts_bd_off ./ R["nrats"]
+    wts_bd_on  = wts_bd_on  ./ R["nrats"]
+
+    # figure()
+    # plot(xaxis_stimon, wts_bd_on)
+    # plot(xaxis_stimoff, wts_bd_off)
+
+    figure()
+    subplot(131) ; hist(perf)   ; xlabel("Performance across all rats")
+    subplot(132) ; hist(rlbias) ; xlabel("RLBias across all rats")
+    subplot(133) ; hist(bias)   ; xlabel("Bias across all rats")
+
+    figure() ; scatter(rlbias, perf) ; ylabel("Perf") ; xlabel("RLBias")
+    figure() ; scatter(bias, perf)   ; xlabel("Bias") ; ylabel("Perf")
+    figure() ; scatter(bias, rlbias) ; xlabel("Bias") ; ylabel("RLBias")
 end
 
-## Load data and fit logit model to click totals
-data = load(cfg.IMPORTPATH_DATA)["data"]
-nbins = data["nbins"]
-nrats = data["nrats"]
-xaxis_stimon  = data["xaxis_stimon"]
-xaxis_stimoff = data["xaxis_stimoff"]
+main(cfg)
 
-perf = [sum(data[irat]["wholetrl"]["X"].hh)/data[irat]["ntrls"] for irat = 1 : data["nrats"]]
-rlbias = [data[irat]["wholetrl"]["logit"].model.pp.beta0[2]/data[irat]["wholetrl"]["logit"].model.pp.beta0[end] for irat = 1 : data["nrats"]]
-bias = [data[irat]["wholetrl"]["logit"].model.pp.beta0[1] for irat = 1 : data["nrats"]]
-
-wts_bd_off = zeros(data["nbins"])
-wts_bd_on  = zeros(data["nbins"])
-for irat = 1 : length(data["nrats"])
-    wts_bd_off = wts_bd_off + data[irat]["stimoff"]["logit_d"].model.pp.beta0[2:end]
-    wts_bd_on  = wts_bd_on  + data[irat]["stimon"]["logit_d"].model.pp.beta0[2:end]
-end
-wts_bd_off = wts_bd_off ./ data["nrats"]
-wts_bd_on  = wts_bd_on  ./ data["nrats"]
-
-figure()
-plot(xaxis_stimon, wts_bd_on)
-plot(xaxis_stimoff, wts_bd_off)

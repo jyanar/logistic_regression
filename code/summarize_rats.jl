@@ -21,21 +21,23 @@ include("utils.jl")
 
 cfg = (
 ## io options
+TITLE           = "chuckrats_update",
 PROGRAM_NAME    = "summarize_rats.jl",
-# IMPORTPATH_DATA = "data/regrMats_allrats_500msLim_50msBin_0msOverlap.jld2",
-IMPORTPATH_DATA = "data/chuckrats_regrMats_allrats_500msLim_50msBin_0msOverlap.jld2",
+# IMPORTPATH_DATA = "data/regrMats_allrats_frozen_noise_500msLim_50msBin_0msOverlap.jld2",
+IMPORTPATH_DATA = "data/regrMats_allrats_chuckrats_update_500msLim_50msBin_0msOverlap.jld2",
 EXPORTPATH_DATA = "data/",
-SAVE_DATA       = false,
+SAVE_DATA       = true,
 
 EXPORTPATH_FIGS = "figs/",
-SAVE_FIGS       = false,
+SAVE_FIGS       = true,
 
 ## analysis and plotting options
 PLOT_KERNEL_MAGNITUDE = true, # Whether to plot L/R time-varying kernels'
                               # magnitudes, instead of opposite to one
                               # another.
-PLOT_BUPDIFF_KERNEL   = false  # Whether to plot the time-varying click
+PLOT_BUPDIFF_KERNEL   = false,  # Whether to plot the time-varying click
                               # difference kernel as well
+ERRORBARS = "ci95"            # 'ci95', 'stderr'
 )
 
 ###############################################################################
@@ -193,12 +195,12 @@ for irat = 1 : data["nrats"]
 
     tight_layout()
     if cfg.SAVE_FIGS
-        savefig(exportpath * "/" * data[irat]["fname"][1:end-8] * "Hz.png", dpi=150);
+        savefig(exportpath * "/" * data[irat]["fname"][1:end-4] * ".png", dpi=150);
     end
 end
 
 if cfg.SAVE_DATA
-    filename = cfg.EXPORTPATH_DATA * "regrMats_logitFits_allrats_" *
+    filename = cfg.EXPORTPATH_DATA * "logitFits_allrats_" * cfg.TITLE * "_" *
                string(data["cfg"].STIM_WINDOW_LEN) * "msLim_" *
                string(data["cfg"].MSPERSEG)        * "msBin_" *
                string(data["cfg"].MSOVERLAP) * "msOverlap.jld2"

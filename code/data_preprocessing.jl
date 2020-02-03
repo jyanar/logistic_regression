@@ -11,8 +11,10 @@ include("utils.jl")
 ################################################################################
 
 cfg = (
-TITLE           = "chuckrats",
-IMPORTPATH_DATA = "data/chuckrats/",   # Import path to .mat behavior
+TITLE           = "chuckrats_update",
+# TITLE           = "frozen_noise",
+IMPORTPATH_DATA = "data/chuckrats_update/",   # Import path to .mat behavior
+# IMPORTPATH_DATA = "data/frozen_noise/",   # Import path to .mat behavior
 EXPORTPATH_DATA = "data/",                # Export path for processed data
 STIM_WINDOW_LEN = 500,                    # Stimulus window length, in ms
 MSPERSEG        = 50,                     # Bin width, in ms
@@ -42,7 +44,7 @@ for irat = 1 : nrats
     regrMats[irat]["stimoff"] = Dict()
 
     ## Read in data, grab violation information
-    data, parsed = load_rat_behavioral_data(cfg.IMPORTPATH_DATA * filelist[irat])
+    data, parsed = load_rat_behavioral_data(cfg.IMPORTPATH_DATA * filelist[irat], cfg.TITLE)
     # violtrls = isnan.(data["gr"])
     # n_rbups = [length(data["bt"][i]["right"]) for i = 1 : length(data["gr"])]
     # n_lbups = [length(data["bt"][i]["left"])  for i = 1 : length(data["gr"])]
@@ -55,12 +57,19 @@ for irat = 1 : nrats
     ## Exclude trials where stimulis less than cfg["STIM_WINDOW_LEN"]
     long_trls = parsed["pd"] .>= cfg.STIM_WINDOW_LEN / 1000
     for k in keys(parsed)
+        # println("key: " * string(k))
         if k == "b"
-            # parsed[k]["left"]  = parsed["b"]["left"][long_trls]
-            # parsed[k]["right"] = parsed["b"]["right"][long_trls]
-            # println(size(long_trls))
-            parsed["b"] = parsed["b"][long_trls']
-            # parsed["b"] = parsed["b"][long_trls']
+            # frozen_noise
+            if cfg.TITLE == "frozen_noise"
+                parsed[k]["left"]  = parsed["b"]["left"][long_trls]
+                parsed[k]["right"] = parsed["b"]["right"][long_trls]
+            elseif cfg.TITLE == "chuckrats_update"
+                # Chuckrats_update
+                parsed[k]["left"]  = parsed["b"]["left"][long_trls']
+                parsed[k]["right"] = parsed["b"]["right"][long_trls']
+            else
+                error("Specify whether this is chuckrats_update or frozen_noise")
+            end
         else
             parsed[k] = parsed[k][long_trls]
         end
@@ -79,10 +88,10 @@ for irat = 1 : nrats
         for itrl = 1 : ntrls
             ## Grab data for this trial
             pd    = parsed["pd"][itrl] * 1000
-            # rbups = parsed["b"]["right"][itrl] .* 1000
-            # lbups = parsed["b"]["left"][itrl]  .* 1000
-            rbups = parsed["b"][itrl]["right"] .* 1000
-            lbups = parsed["b"][itrl]["left"]  .* 1000
+            rbups = parsed["b"]["right"][itrl] .* 1000
+            lbups = parsed["b"]["left"][itrl]  .* 1000
+            # rbups = parsed["b"][itrl]["right"] .* 1000
+            # lbups = parsed["b"][itrl]["left"]  .* 1000
             if isa(rbups, Float64) rbups = [rbups] end
             if isa(lbups, Float64) lbups = [lbups] end
             ## Bin left and right clicks aligned to stimulus onset and offset
@@ -114,16 +123,12 @@ for irat = 1 : nrats
     ## Note that we also want to make a dataframe that keeps track of
     ## the absolute total number of L/R clicks per trial, for the left
     ## and right. We add the correct right / correct left params here too.
-    # dict_X = Dict("hh" => convert.(Int64, parsed["hh"]),
-    #               "gr" => convert.(Int64, parsed["gr"]),
-    #               "gl" => -1 .* (convert.(Int64, parsed["gr"]) .- 1),
-    #           "wtRtot" => [length(parsed["b"]["right"][i]) for i = 1 : ntrls],
-    #           "wtLtot" => [length(parsed["b"]["left"][i]) for i = 1 : ntrls])
+    # chuckrats_update
     dict_X = Dict("hh" => convert.(Int64, parsed["hh"]),
                   "gr" => convert.(Int64, parsed["gr"]),
                   "gl" => -1 .* (convert.(Int64, parsed["gr"]) .- 1),
-              "wtRtot" => [length(parsed["b"][i]["right"]) for i = 1 : ntrls],
-              "wtLtot" => [length(parsed["b"][i]["left"]) for i = 1 : ntrls])
+              "wtRtot" => [length(parsed["b"]["right"][i]) for i = 1 : ntrls],
+              "wtLtot" => [length(parsed["b"]["left"][i]) for i = 1 : ntrls])
     dict_X["cr"] = (dict_X["wtRtot"] - dict_X["wtLtot"]) .> 0
     dict_X["cl"] = (dict_X["wtRtot"] - dict_X["wtLtot"]) .< 0
     regrMats[irat]["wholetrl"] = Dict{Any,Any}("X" => DataFrame(dict_X))
@@ -138,7 +143,7 @@ for irat = 1 : nrats
 end
 
 ## Save dataframes for next step in logit analysis
-filename = cfg.EXPORTPATH_DATA * cfg.TITLE * "_regrMats_allrats_" *
+filename = cfg.EXPORTPATH_DATA * "regrMats_allrats_" * cfg.TITLE * "_" * 
            string(cfg.STIM_WINDOW_LEN) * "msLim_" *
            string(cfg.MSPERSEG)        * "msBin_" *
            string(cfg.MSOVERLAP) * "msOverlap.jld2"

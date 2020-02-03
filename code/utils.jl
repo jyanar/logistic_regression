@@ -31,13 +31,16 @@ end
 
 
 """ Load clean rat behavioral data from .mat files """
-function load_rat_behavioral_data(importpath::String)::Tuple{Dict, Dict}
+function load_rat_behavioral_data(importpath::String, title::String="frozen_noise")::Tuple{Dict, Dict}
     data = matread(importpath)
     data = data["ratdata"]
     parsed = data["parsed"]
-    # for k in keys(parsed)
-    #     parsed[k] = parsed[k][1]
-    # end
+    # TODO: Refactor!
+    if title == "frozen_noise"
+        for k in keys(parsed)
+            parsed[k] = parsed[k][1]
+        end
+    end
     return data, parsed
 end
 

@@ -1,11 +1,22 @@
 # Lab Notebook
 
+# 2020-02-03
+
+- [x] Get pipeline for the frozen_noise and the chuckrats_update stuff smoothly
+  running, so we can run either of them.
+- Get the summary data plotted across all of these rats.
+  - Performance vs bias
+    - How to quantify performance? Overall correct? Maybe restrict by harder, or
+      easier trials?
+  - Bias (both intercept, as well as wR/wL or something like that)
+    - Scatter against each other
+- If time allows: quantifying accuracy?
+
 # 2020-01-30
 
 - Get chuck's files read in
 - Plots to make
   - Performance vs bias, across all rats
-  - 
 
 # 2020-01-27
 
