@@ -14,11 +14,11 @@ cfg = (
 TITLE           = "chuckrats_update",
 # TITLE           = "frozen_noise",
 IMPORTPATH_DATA = "data/chuckrats_update/",   # Import path to .mat behavior
-# IMPORTPATH_DATA = "data/frozen_noise/",   # Import path to .mat behavior
-EXPORTPATH_DATA = "data/",                # Export path for processed data
-STIM_WINDOW_LEN = 500,                    # Stimulus window length, in ms
-MSPERSEG        = 50,                     # Bin width, in ms
-MSOVERLAP       = 0                       # Bin overlap, in ms
+# IMPORTPATH_DATA = "data/frozen_noise/",     # Import path to .mat behavior
+EXPORTPATH_DATA = "data/",                    # Export path for processed data
+STIM_WINDOW_LEN = 500,                        # Stimulus window length, in ms
+MSPERSEG        = 50,                         # Bin width, in ms
+MSOVERLAP       = 0                           # Bin overlap, in ms
 )
 
 ################################################################################

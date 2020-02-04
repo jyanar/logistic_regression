@@ -22,11 +22,14 @@ include("utils.jl")
 cfg = (
 ## io options
 TITLE           = "chuckrats_update",
+# TITLE           = "frozen_noise",
 PROGRAM_NAME    = "summarize_rats.jl",
 # IMPORTPATH_DATA = "data/regrMats_allrats_frozen_noise_500msLim_50msBin_0msOverlap.jld2",
+# IMPORTPATH_AUC  = "data/AUCs_allrats_frozen_noise2_500msLim_50msBin_0msOverlap.jld2",
 IMPORTPATH_DATA = "data/regrMats_allrats_chuckrats_update_500msLim_50msBin_0msOverlap.jld2",
+IMPORTPATH_AUC  = "data/AUCs_allrats_chuckrats_1D_bd_auc_500msLim_50msBin_0msOverlap.jld2",
 EXPORTPATH_DATA = "data/",
-SAVE_DATA       = true,
+SAVE_DATA       = false,
 
 EXPORTPATH_FIGS = "figs/",
 SAVE_FIGS       = true,
@@ -35,7 +38,7 @@ SAVE_FIGS       = true,
 PLOT_KERNEL_MAGNITUDE = true, # Whether to plot L/R time-varying kernels'
                               # magnitudes, instead of opposite to one
                               # another.
-PLOT_BUPDIFF_KERNEL   = false,  # Whether to plot the time-varying click
+PLOT_BUPDIFF_KERNEL   = true,  # Whether to plot the time-varying click
                               # difference kernel as well
 ERRORBARS = "ci95"            # 'ci95', 'stderr'
 )
@@ -49,6 +52,7 @@ end
 ## Load data and fit logit model to click totals
 # data = load(cfg["IMPORTPATH_STIMON_DATA"])["regrMats"]
 data = load(cfg.IMPORTPATH_DATA)["regrMats"]
+aucs = load(cfg.IMPORTPATH_AUC)["data"]
 nbins = data["nbins"]
 nrats = data["nrats"]
 xaxis_stimon  = data["xaxis_stimon"]
@@ -57,6 +61,18 @@ xaxis_stimoff = data["xaxis_stimoff"]
 for irat = 1 : data["nrats"]
     println("Processing: " * string(irat) * " ...")
     ratid = data[irat]["fname"][1:4]
+
+    ## Grab AUCs
+    auc_wholetrl = aucs[irat]["wholetrl"]["auc"]
+    auc_wholetrlbd = aucs[irat]["wholetrl"]["auc_bd"]
+
+    auc_off_rl = aucs[irat]["stimoff"]["auc_rl"]
+    auc_off_bd = aucs[irat]["stimoff"]["auc_bd"]
+    auc_off_total = aucs[irat]["stimoff"]["auc_total"]
+
+    auc_on_rl = aucs[irat]["stimon"]["auc_rl"]
+    auc_on_bd = aucs[irat]["stimon"]["auc_bd"]
+    auc_on_total = aucs[irat]["stimon"]["auc_total"]
 
     ## Fitting
     ## Construct expressions for glm: "y ~ wtR_1 + wtR_2 + ...", fit to
@@ -87,7 +103,8 @@ for irat = 1 : data["nrats"]
                                              data[irat]["wholetrl"]["X"].gr)
     imshow(rat_decision_surf, origin="lower", cmap=get_cmap("RdBu"))
     xlabel("#R Clicks") ; ylabel("#L Clicks") ; cbar = colorbar() ; clim([0, 1])
-    title("2d psychometric, rat. Ntrls=" * string(data[irat]["ntrls"])) ; cbar.ax.set_ylabel("% go right")
+    title("2D, rat. Ntrls=" * string(data[irat]["ntrls"]))
+    cbar.ax.set_ylabel("% go right")
 
     ###################################
     ## 2D MODEL PSYCHOMETRIC SURFACE ##
@@ -105,7 +122,10 @@ for irat = 1 : data["nrats"]
     end
     imshow(model_decision_surf, origin="lower", cmap=get_cmap("RdBu"))
     xlabel("#R Clicks") ; ylabel("#L Clicks") ; cbar = colorbar(); clim([0, 1])
-    title("2D psychometric, model") ; cbar.ax.set_ylabel("% go right")
+    title(@sprintf("2D, model. β=%0.2f, AUC(ROC)=%0.2f+/-%0.2f",
+        data[irat]["wholetrl"]["logit"].model.pp.beta0[1],
+        mean(auc_wholetrl), std(auc_wholetrl)))
+    cbar.ax.set_ylabel("% go right")
 
     ########################################
     ## TIME-VARYING L/R MODEL, STIM ONSET ##
@@ -131,8 +151,12 @@ for irat = 1 : data["nrats"]
         ylims = ylim() ; ylim([-maximum(abs.(ylims)), maximum(abs.(ylims))])
     end
     xlim([data["xaxis_stimon"][1]-5 , data["xaxis_stimon"][end]+5])
-    title("Stim onset-locked logit weights, bias=" * @sprintf "%0.3f+/-%0.3f" res_rl.bias res_rl.berr);
+    title(L"Stim onset $w_{t}$, β=" * @sprintf("%0.2f ", res_rl.bias) *
+        @sprintf("AUC(ROC)=%0.2f+/-%0.2f", mean(auc_on_rl), std(auc_on_rl)))
 
+    #########################################
+    ## TIME-VARYING L/R MODEL, STIM OFFSET ##
+    #########################################
     subplot(235)
     res_rl = get_wts_sterr(data[irat]["stimoff"]["logit_rl"], nbins, true)
     res_d  = get_wts_sterr(data[irat]["stimoff"]["logit_d"], nbins, false)
@@ -154,7 +178,8 @@ for irat = 1 : data["nrats"]
         ylims = ylim() ; ylim([-maximum(abs.(ylims)), maximum(abs.(ylims))])
     end
     xlim([data["xaxis_stimoff"][1]-5 , data["xaxis_stimoff"][end]+5])
-    title("Stim offset-locked logit weights, bias=" * @sprintf "%0.3f+/-%0.3f" res_rl.bias res_rl.berr);
+    title(L"Stim offset $w_{t}$, β=" * @sprintf("%0.2f ", res_rl.bias) *
+        @sprintf("AUC(ROC)=%0.2f+/-%0.2f", mean(auc_off_rl), std(auc_off_rl)))
 
     ############################################################################
     ## Generate rate 1D psychometric function (click diff), and model as well ##
@@ -174,7 +199,7 @@ for irat = 1 : data["nrats"]
     plot(xaxis, predict(logit_bd, DataFrame(bd=xaxis)), "k", label="model")
     plot(xaxis, propgr, "k", alpha=0.5, label="rat")
     grid() ; legend(); xlabel("Click difference [#R-#L]") ; ylabel("% go right")
-    title("1D psychometric")
+    title(@sprintf("1D rat & model. AUC(ROC)=%0.2f+/-%0.2f", mean(auc_wholetrlbd), std(auc_wholetrlbd)))
 
     ###################################
     ## Performance stacked bar plots ##

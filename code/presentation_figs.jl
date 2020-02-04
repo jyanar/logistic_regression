@@ -19,7 +19,8 @@ include("utils.jl")
 cfg = (
 ## io options
 PROGRAM_NAME    = "presentation_fig.jl",
-IMPORTPATH_DATA = "data/regrMats_logitFits_allrats_500msLim_50msBin_0msOverlap.jld2",
+# IMPORTPATH_DATA = "data/regrMats_logitFits_allrats_500msLim_50msBin_0msOverlap.jld2",
+IMPORTPATH_DATA = "data/R_allrats.jld2",
 EXPORTPATH_DATA = "data/",
 SAVE_DATA       = false,
 
@@ -36,7 +37,7 @@ PLOT_BUPDIFF_KERNEL   = false  # Whether to plot the time-varying click
 
 ###############################################################################
 
-data = load(cfg.IMPORTPATH_DATA)["data"]
+data = load(cfg.IMPORTPATH_DATA)["R"]
 
 ## PLOT 1D OF ALL RATS
 figure();
