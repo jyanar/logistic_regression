@@ -1,9 +1,19 @@
 # Lab Notebook
 
+# 2020-02-04
+
+- Lab meeting done! Refactor the code and organize the data. Some ideas:
+  - Make sure that the "X" matrices contain the gamma rates, so we can do StratifiedKFold and make sure that folds contain sufficient amounts of hard trials / easy trials etc.
+  - Metarat analyses. Could fit to one giant X matrix, or average across logit weights to get one logit model.
+  - Compute confidence intervals using cross-validation
+- Refactor code
+  
+
 # 2020-02-03
 
 - [x] Get pipeline for the frozen_noise and the chuckrats_update stuff smoothly
   running, so we can run either of them.
+
 - Get the summary data plotted across all of these rats.
   - Performance vs bias
     - How to quantify performance? Overall correct? Maybe restrict by harder, or
@@ -123,7 +133,6 @@
   
   - parsed: struct, contains previous data but cleaned of violated trials.
     Contains the following fields:
-    
         - bd: Bup difference at the end of the trial
         - gr: Whether the rat went right (1, went right, 0, went left)
         - b: Clicktimes

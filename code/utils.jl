@@ -68,11 +68,11 @@ Returns:
 - binlims::Array{Int64}: Lower & upper limits for bins
 """
 function bin_bups_trial(pd::Float64,
-                     rbups::Array{Float64},
-                     lbups::Array{Float64},
-                     nbins::Int64,
-                  timelock::String,
-           stim_window_len::Int64)::Tuple{Array{Int64}, Array{Int64}, Array{Int64}}
+                        rbups::Array{Float64},
+                        lbups::Array{Float64},
+                        nbins::Int64,
+                        timelock::String,
+                        stim_window_len::Int64)::Tuple{Array{Int64}, Array{Int64}, Array{Int64}}
     rbinned = zeros(Int64, nbins)
     lbinned = zeros(Int64, nbins)
     ## Align rbup/lbup times if necessary, and cut off bups that occur
