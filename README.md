@@ -9,7 +9,7 @@ In short, fits the following four models:
 ### 1D click difference
 ![equation](https://latex.codecogs.com/svg.latex?log%28%5Cfrac%7Bp_R%7D%7B1%20-%20p_R%7D%29%20%3D%20w%20%5CDelta_%7Bclicks%7D%20&plus;%20%5Cbeta)
 
-### 2D, number of right and left clicks across all clicks
+### 2D, total number of right and left clicks
 ![equation](https://latex.codecogs.com/svg.latex?log%28%5Cfrac%7Bp_R%7D%7B1%20-%20p_R%7D%29%20%3D%20w_L%20N_L%20&plus;%20w_R%20N_R%20&plus;%20%5Cbeta)
 
 ### Click difference across time
